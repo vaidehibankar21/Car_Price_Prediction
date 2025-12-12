@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Car Price Predictor</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css">
+</head>
+
+<body class="bg-dark">
+
+    <div class="container mt-5">
+        <div class="card p-4">
+
+            <h2 class="text-center">Car Price Predictor</h2>
+
+            <!-- IMPORTANT: action="/predict" method="POST" -->
+            <form id="carForm" method="POST" action="/predict">
+
+                <div class="form-group">
+                    <label>Select Company:</label>
+                    <select class="form-control" id="company" name="company" onchange="loadModels()">
+                        {% for c in companies %}
+                        <option value="{{ c }}">{{ c }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Select Model:</label>
+                    <select class="form-control" id="car_model" name="car_model"></select>
+                </div>
+
+                <div class="form-group">
+                    <label>Select Year:</label>
+                    <select class="form-control" name="year">
+                        {% for y in years %}
+                        <option value="{{ y }}">{{ y }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Select Fuel Type:</label>
+                    <select class="form-control" name="fuel_type">
+                        {% for f in fuel_types %}
+                        <option value="{{ f }}">{{ f }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Kilometers Driven:</label>
+                    <!-- FIX: name="kilo_driven" (VERY IMPORTANT) -->
+                    <input type="number" class="form-control" name="kilo_driven" required>
+                </div>
+
+                <!-- FIX: Plain button (NOT submit) -->
+                <button type="button" class="btn btn-primary btn-block" onclick="sendData()">
+                    Predict Price
+                </button>
+            </form>
+
+            <h3 class="text-center mt-4 text-success" id="prediction"></h3>
+
+        </div>
+    </div>
+
+    <script>
+        let carModels = {{ car_models | tojson }};
+
+        function loadModels() {
+            let company = document.getElementById("company").value;
+            let models = carModels[company];
+            let modelSelect = document.getElementById("car_model");
+
+            modelSelect.innerHTML = "";
+            models.forEach(m => {
+                let opt = document.createElement("option");
+                opt.value = m;
+                opt.textContent = m;
+                modelSelect.appendChild(opt);
+            });
+        }
+
+        window.onload = loadModels;
+
+        function sendData() {
+            let form = document.getElementById("carForm");
+            let fd = new FormData(form);
+
+            document.getElementById("prediction").innerHTML = "Predicting...";
+
+            fetch("/predict", {
+                method: "POST",
+                body: fd
+            })
+            .then(res => res.text())
+            .then(data => {
+                document.getElementById("prediction").innerHTML =
+                    "Predicted Price: ₹ " + data;
+            });
+        }
+    </script>
+
+</body>
+</html>
